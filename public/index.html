@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050a14">
+  <title>JARVIS AI</title>
+  <style>
+    :root{color-scheme:dark;--cyan:#42e8ff;--blue:#477bff;--bg:#050a14;--panel:#0b1527;--muted:#9eb4ce}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#102746 0,#050a14 55%);color:#eaf8ff;font:16px system-ui,sans-serif;min-height:100vh}
+    .shell{max-width:850px;margin:auto;padding:22px 14px 30px}.top{text-align:center;padding:20px 0}
+    .orb{width:86px;height:86px;border:2px solid var(--cyan);border-radius:50%;margin:auto;box-shadow:0 0 20px #42e8ff88,inset 0 0 24px #42e8ff55;display:grid;place-items:center;color:var(--cyan);font-weight:800;letter-spacing:2px}
+    h1{margin:15px 0 4px;letter-spacing:5px;font-size:28px}p.sub{color:var(--muted);margin:0}
+    .panel{background:#081323dd;border:1px solid #42e8ff44;border-radius:18px;padding:14px;box-shadow:0 0 24px #001b33;margin:14px 0}
+    #status{font-size:13px;color:var(--muted);margin-bottom:10px}.messages{height:min(52vh,480px);overflow:auto;display:flex;flex-direction:column;gap:10px;padding:5px 0}
+    .bubble{padding:11px 13px;border-radius:14px;max-width:92%;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45}
+    .user{align-self:flex-end;background:#13385a;border:1px solid #42e8ff55}.bot{align-self:flex-start;background:#0d1d31;border:1px solid #6c8cff44}
+    .compose{display:flex;gap:8px}.compose input{min-width:0;flex:1;background:#030a13;color:white;border:1px solid #2d5872;border-radius:12px;padding:13px;font:inherit}
+    button{background:linear-gradient(135deg,#0d7ea0,#315dcb);border:1px solid #42e8ff88;color:white;border-radius:12px;padding:12px 14px;font:inherit;font-weight:700}
+    button:disabled{opacity:.5}.hint{font-size:12px;color:var(--muted);line-height:1.5}.row{display:flex;gap:8px;flex-wrap:wrap}
+  </style>
+</head>
+<body><main class="shell">
+  <header class="top"><div class="orb">J.AI</div><h1>JARVIS AI</h1><p class="sub">Hindi-friendly AI • Web + Android API</p></header>
+  <section class="panel">
+    <div id="status">Server status check ho raha hai…</div>
+    <div id="messages" class="messages"><div class="bubble bot">Namaste! Main JARVIS AI hoon. Server connect karne ke baad yahan chat kar sakte ho.</div></div>
+    <form id="form" class="compose"><input id="message" maxlength="6000" placeholder="Yahan message likho…" autocomplete="off" required><button id="send">Send</button></form>
+    <p class="hint">Demo website. Android app ko /api/chat endpoint aur Bearer token se connect kiya ja sakta hai. API key server par secret rakho.</p>
+  </section>
+</main>
+<script>
+const statusEl=document.getElementById('status'), messages=document.getElementById('messages'), form=document.getElementById('form'), input=document.getElementById('message'), send=document.getElementById('send');
+let history=[];
+function bubble(text,who){const el=document.createElement('div');el.className='bubble '+who;el.textContent=text;messages.appendChild(el);messages.scrollTop=messages.scrollHeight;return el}
+fetch('/health').then(r=>r.json()).then(d=>statusEl.textContent='Server online • Model: '+d.model).catch(()=>statusEl.textContent='Server status unavailable');
+form.addEventListener('submit',async e=>{e.preventDefault();const message=input.value.trim();if(!message)return;input.value='';bubble(message,'user');send.disabled=true;const wait=bubble('Soch raha hoon…','bot');
+try{const token=prompt('Demo website chat ke liye JARVIS_API_TOKEN enter karo. Public website mein token ko browser code mein rakhna secure nahi hota; is demo ko personal use tak rakho.');if(!token)throw new Error('Token nahi diya.');const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message,history})});const data=await r.json();if(!r.ok)throw new Error(data.error||'Request failed');wait.textContent=data.reply;history.push({role:'user',text:message},{role:'model',text:data.reply});history=history.slice(-8)}catch(err){wait.textContent='Error: '+err.message}finally{send.disabled=false;input.focus()}});
+</script></body></html>
